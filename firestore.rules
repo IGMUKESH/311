@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isBlocked() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('blocked', false) == true;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "ig.mukesh12@gmail.com" && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin' &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('blocked', false) == false)
+      );
+    }
+
+    function isMainAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.email == "ig.mukesh12@gmail.com" && request.auth.token.email_verified == true;
+    }
+
+    function isSubAdmin() {
+      return isAuthenticated() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'sub-admin' &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('blocked', false) == false)
+      );
+    }
+
+    function isValidQuote(data) {
+      return (data.text == null || data.text == "" || (data.text is string && data.text.size() < 5000)) &&
+             data.category is string && data.category.size() > 0 &&
+             data.createdAt is string;
+    }
+
+    // Quotes: Anyone can read (if not blocked), admins and sub-admins can write
+    match /quotes/{quoteId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow create: if isSubAdmin() && isValidQuote(request.resource.data);
+      allow update: if (isSubAdmin() && isValidQuote(request.resource.data) && (isAdmin() || resource.data.createdBy == request.auth.uid)) ||
+                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewsCount'])) ||
+                    (isAuthenticated() && !isBlocked() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])) ||
+                    (isAuthenticated() && !isBlocked() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadsCount']));
+      allow delete: if isAdmin() || (isSubAdmin() && resource.data.createdBy == request.auth.uid);
+    }
+
+    // Collection group for comments (Admin only for all comments view)
+    match /{path=**}/comments/{commentId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() || (!isBlocked() && isAuthenticated());
+    }
+
+    // Users: Users can read/write their own profile, admins can read all
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == userId && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'phoneNumber', 'downloadsCount', 'sharesCount', 'downloadCredits', 'shareCredits', 'updatedAt'])
+        ) || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Settings: Admins can read/write, anyone can read payment settings
+    match /settings/{settingId} {
+      allow read: if isAdmin() || (settingId == 'payment' && isAuthenticated());
+      allow write: if isAdmin();
+    }
+
+    // Subscriptions: Admins can read all, users can read their own
+    match /subscriptions/{subId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated(); // Verification happens on server, but we allow create for record keeping
+      allow update, delete: if isAdmin();
+    }
+
+    // Users Public: Anyone can read
+    match /users_public/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Malas and Categories
+    match /malas/{malaId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow create, update: if isSubAdmin();
+      allow delete: if isAdmin() || (isSubAdmin() && resource.data.createdBy == request.auth.uid);
+    }
+
+    match /categories/{catId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow create, update: if isSubAdmin();
+      allow delete: if isAdmin() || (isSubAdmin() && resource.data.createdBy == request.auth.uid);
+    }
+
+    // Mala Stats: Anyone can read (for leaderboard), users can update their own
+    match /mala_stats/{userId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId && !isBlocked());
+      allow delete: if isAdmin();
+    }
+
+    // Likes: Anyone can read, users can write their own
+    match /quotes/{quoteId}/likes/{userId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId && !isBlocked());
+    }
+
+    // Comments: Anyone can read, authenticated users can create, only owners can delete
+    match /quotes/{quoteId}/comments/{commentId} {
+      allow read: if isAdmin() || !isBlocked();
+      allow create: if isAdmin() || (isAuthenticated() && !isBlocked() && request.resource.data.uid == request.auth.uid);
+      allow update: if isAdmin() || (isAuthenticated() && !isBlocked() && resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin() || (isAuthenticated() && !isBlocked() && resource.data.uid == request.auth.uid);
+    }
+  }
+}

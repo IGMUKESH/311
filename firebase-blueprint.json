@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "quote": {
+      "title": "Quote",
+      "description": "A spiritual or motivational quote.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text content of the quote."
+        },
+        "author": {
+          "type": "string",
+          "description": "The author of the quote."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the quote (e.g., Mahadev, Ram, etc.)."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Optional image URL for the quote."
+        },
+        "likesCount": {
+          "type": "integer",
+          "description": "Number of likes on the quote."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the quote was created."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "UID of the admin who created the quote."
+        }
+      },
+      "required": ["category", "createdAt", "createdBy"]
+    },
+    "user": {
+      "title": "User",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "sub-admin", "user"]
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "like": {
+      "title": "Like",
+      "description": "A user's like on a quote.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "quoteId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "quoteId", "createdAt"]
+    },
+    "comment": {
+      "title": "Comment",
+      "description": "A user's comment on a quote.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "text", "createdAt"]
+    },
+    "category": {
+      "title": "Category",
+      "description": "A category for quotes.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/quotes/{quoteId}": {
+      "schema": "quote",
+      "description": "Collection of quotes."
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profiles."
+    },
+    "/quotes/{quoteId}/likes/{userId}": {
+      "schema": "like",
+      "description": "Likes on a specific quote."
+    },
+    "/quotes/{quoteId}/comments/{commentId}": {
+      "schema": "comment",
+      "description": "Comments on a specific quote."
+    },
+    "/categories/{categoryId}": {
+      "schema": "category",
+      "description": "Collection of quote categories."
+    }
+  }
+}

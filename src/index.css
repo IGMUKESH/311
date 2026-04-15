@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Laila:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-accent: #F27D26;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --font-sans: 'Inter', 'Noto Sans Devanagari', 'Laila', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-laila: 'Laila', serif;
+}
+
+.dark {
+  --color-bg: #000000;
+  --color-card: #151619;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8E9299;
+}
+
+:root {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overscroll-behavior: none;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+.glass-card {
+  background-color: var(--color-card);
+  backdrop-filter: blur(10px);
+}
+
+.dark .glass-card {
+  background-color: var(--color-card);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #F27D26, #FF4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideTop {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideBottom {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-left {
+  animation: slideLeft ease-out forwards;
+}
+
+.animate-slide-right {
+  animation: slideRight ease-out forwards;
+}
+
+.animate-slide-top {
+  animation: slideTop ease-out forwards;
+}
+
+.animate-slide-bottom {
+  animation: slideBottom ease-out forwards;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.clip-hexagon {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.clip-star {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.clip-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.clip-shield {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%);
+}
